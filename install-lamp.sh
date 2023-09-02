@@ -78,10 +78,23 @@ install_composer() {
     fi
 }
 
-# Function to install Node.js LTS
+# Function to install Node.js
 install_nodejs() {
-    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-    sudo apt install -y nodejs
+    echo "Select the Node.js version you want to install:"
+    echo "1) Node.js (16.x)"
+    echo "2) Node.js (18.x)"
+    echo "3) Node.js (20.x)"
+    read -p "Enter the version number (1/2/3): " nodejs_version_choice
+
+    sudo apt-get install -y ca-certificates curl gnupg
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+
+    NODE_MAJOR=$nodejs_version_choice
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+
+    sudo apt-get update
+    sudo apt-get install nodejs -y
 }
 
 # Function to clean up and start services
@@ -108,7 +121,7 @@ echo "2) Install MySQL Server"
 echo "3) Create a MySQL user"
 echo "4) Select PHP version"
 echo "5) Install Composer"
-echo "6) Install Node.js LTS"
+echo "6) Install Node.js"
 echo "7) Install all components"
 read -p "Enter the option number (1/2/3/4/5/6/7): " install_option
 

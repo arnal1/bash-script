@@ -31,6 +31,11 @@ create_mysql_user() {
     fi
 }
 
+# Function to install SQLite 3
+install_sqlite() {
+    sudo apt install sqlite3 -y
+}
+
 # Function to select PHP version
 select_php_version() {
     echo "Select the PHP version you want to install:"
@@ -46,20 +51,22 @@ select_php_version() {
     case $php_version_choice in
         2)
             PHP_VERSION="8.0"
+            sudo apt install php${PHP_VERSION} libapache2-mod-php php${PHP_VERSION}-mysql php${PHP_VERSION}-curl php${PHP_VERSION}-mbstring php${PHP_VERSION}-xml php${PHP_VERSION}-zip php${PHP_VERSION}-sqlite3 -y
             ;;
         3)
             PHP_VERSION="8.1"
+            sudo apt install php${PHP_VERSION} libapache2-mod-php php${PHP_VERSION}-mysql php${PHP_VERSION}-curl php${PHP_VERSION}-mbstring php${PHP_VERSION}-xml php${PHP_VERSION}-zip php${PHP_VERSION}-sqlite3 php${PHP_VERSION}-bcmath -y
             ;;
         4)
             PHP_VERSION="8.2"
+            sudo apt install php${PHP_VERSION} libapache2-mod-php php${PHP_VERSION}-mysql php${PHP_VERSION}-curl php${PHP_VERSION}-mbstring php${PHP_VERSION}-xml php${PHP_VERSION}-zip php${PHP_VERSION}-sqlite3 -y
             ;;
         *)
             echo "Using PHP 8.1 (default)"
+            PHP_VERSION="8.1"
+            sudo apt install php${PHP_VERSION} libapache2-mod-php php${PHP_VERSION}-mysql php${PHP_VERSION}-curl php${PHP_VERSION}-mbstring php${PHP_VERSION}-xml php${PHP_VERSION}-zip php${PHP_VERSION}-sqlite3 -y
             ;;
     esac
-
-    # Install PHP and required extensions
-    sudo apt install php${PHP_VERSION} libapache2-mod-php php${PHP_VERSION}-mysql php${PHP_VERSION}-curl php${PHP_VERSION}-mbstring php${PHP_VERSION}-xml php${PHP_VERSION}-zip -y
 }
 
 # Function to install Composer
@@ -81,20 +88,34 @@ install_composer() {
 # Function to install Node.js
 install_nodejs() {
     echo "Select the Node.js version you want to install:"
-    echo "1) Node.js (16.x)"
-    echo "2) Node.js (18.x)"
-    echo "3) Node.js (20.x)"
+    echo "1) Node.js (16)"
+    echo "2) Node.js (18) (Default)"
+    echo "3) Node.js (20)"
     read -p "Enter the version number (1/2/3): " nodejs_version_choice
 
-    sudo apt-get install -y ca-certificates curl gnupg
-    sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+    case $nodejs_version_choice in
+        1)
+            NODE_MAJOR=16
+            ;;
+        2)
+            NODE_MAJOR=18
+            ;;
+        3)
+            NODE_MAJOR=20
+            ;;
+        *)
+            NODE_MAJOR=18
+            echo "Invalid option (use default version 18)"
+            ;;
+    esac
 
-    NODE_MAJOR=$nodejs_version_choice
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+    sudo apt install curl
 
-    sudo apt-get update
-    sudo apt-get install nodejs -y
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+
+    source ~/.bashrc
+
+    nvm install ${NODE_MAJOR}
 }
 
 # Function to clean up and start services
@@ -119,11 +140,12 @@ echo "Choose installation option:"
 echo "1) Install Apache2"
 echo "2) Install MySQL Server"
 echo "3) Create a MySQL user"
-echo "4) Select PHP version"
-echo "5) Install Composer"
-echo "6) Install Node.js"
-echo "7) Install all components"
-read -p "Enter the option number (1/2/3/4/5/6/7): " install_option
+echo "4) Install SQLite 3"
+echo "5) Select PHP version"
+echo "6) Install Composer"
+echo "7) Install Node.js"
+echo "8) Install all components"
+read -p "Enter the option number (1/2/3/4/5/6/7/8): " install_option
 
 case $install_option in
     1)
@@ -136,18 +158,22 @@ case $install_option in
         create_mysql_user
         ;;
     4)
-        select_php_version
+        install_sqlite
         ;;
     5)
-        install_composer
+        select_php_version
         ;;
     6)
-        install_nodejs
+        install_composer
         ;;
     7)
+        install_nodejs
+        ;;
+    8)
         install_apache
         install_mysql
         create_mysql_user
+        install_sqlite
         select_php_version
         install_composer
         install_nodejs
